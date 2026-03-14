@@ -112,6 +112,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 configurations {
     library
     runtimeClasspath.extendsFrom localRuntime
+    jarJar.transitive true
 }
 obfuscation {
     createRemappingConfiguration(configurations.localRuntime)
@@ -144,15 +145,22 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     // Javalin
-    jarJar(implementation("io.javalin:javalin:${javalin_version}"))
+    jarJar(implementation(group: 'io.javalin', name: 'javalin')) {
+        exclude group: "org.jetbrains"
+        version {
+            // Version used in your workspace and bundled in mod jar
+            prefer javalin_version
+        }
+    }
+    jarJar(implementation("com.fasterxml.jackson.core:jackson-core:${jackson_version}"))
+    jarJar(implementation("com.fasterxml.jackson.core:jackson-databind:${jackson_version}"))
+    // this fixes it in dev
     additionalRuntimeClasspath("io.javalin:javalin:${javalin_version}")
-    annotationProcessor("io.javalin.community.openapi:openapi-annotation-processor:${javalin_version}")
-    jarJar(implementation("io.javalin.community.openapi:javalin-openapi-plugin:${javalin_version}"))
-    additionalRuntimeClasspath("io.javalin.community.openapi:javalin-openapi-plugin:${javalin_version}")
-    jarJar(implementation("io.javalin.community.openapi:javalin-swagger-plugin:${javalin_version}"))
-    additionalRuntimeClasspath("io.javalin.community.openapi:javalin-swagger-plugin:${javalin_version}")
-    jarJar(implementation("io.javalin.community.openapi:javalin-redoc-plugin:${javalin_version}"))
-    additionalRuntimeClasspath("io.javalin.community.openapi:javalin-redoc-plugin:${javalin_version}")
+    additionalRuntimeClasspath("com.fasterxml.jackson.core:jackson-core:${jackson_version}")
+    additionalRuntimeClasspath("com.fasterxml.jackson.core:jackson-databind:${jackson_version}")
+//    annotationProcessor("io.javalin.community.openapi:openapi-annotation-processor:${javalin_version}")
+//    jarJar(implementation("io.javalin.community.openapi:javalin-openapi-plugin:${javalin_version}"))
+//    additionalRuntimeClasspath("io.javalin.community.openapi:javalin-openapi-plugin:${javalin_version}")
 
     // Create
     modImplementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }

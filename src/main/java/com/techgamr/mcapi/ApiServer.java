@@ -20,7 +20,6 @@ import io.javalin.Javalin;
 import io.javalin.config.RoutesConfig;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-import io.javalin.openapi.plugin.OpenApiPlugin;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -39,14 +38,6 @@ public class ApiServer {
 
     public void start(MinecraftServer server) {
         app = Javalin.create(config -> {
-            config.registerPlugin(new OpenApiPlugin((pluginCfg) -> {
-                pluginCfg.withDefinitionConfiguration((s, builder) -> {
-                    builder.info((info) -> {
-                        info.title("mcapi");
-                    });
-                });
-            }));
-
             initRoutes(config.routes, server);
         }).start("127.0.0.1", 3333);
     }
