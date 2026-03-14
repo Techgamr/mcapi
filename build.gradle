@@ -196,6 +196,13 @@ shadowJar {
     configurations = [project.configurations.shade]
     enableAutoRelocation = true
     relocationPrefix = "${mod_group_id}.shaded"
+    dependencies {
+        exclude(dependency('org.slf4j:.*'))
+    }
+//    relocate "io.javalin", "${mod_group_id}.shaded.io.javalin"
+//    relocate "kotlin", "${mod_group_id}.shaded.io.javalin"
+//    relocate "jakarta", "${mod_group_id}.shaded.io.javalin"
+//    relocate("com.google.guava", "com.mycompany.shaded.com.google.guava")
 }
 
 assemble.dependsOn shadowJar
