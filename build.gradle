@@ -118,6 +118,7 @@ configurations {
 }
 obfuscation {
     createRemappingConfiguration(configurations.localRuntime)
+    reobfuscate(tasks.named('shadowJar'), sourceSets.main)
 }
 
 dependencies {
