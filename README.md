@@ -19,6 +19,7 @@ This will start a server on 127.0.0.1:3333.
 Authentication must be currently handled on an external proxy using the reverse proxy auth API - see `ApiServer.java`.
 This is not currently implemented in-process but will be optionally in the future.
 As a result, you must currently implement this on a proxy in front of `mcapi` such as a cloudflare worker.
+A simple example for testing is available in [example-worker.ts](example-worker.ts).
 
 **_MAKE SURE_ to not expose the unauthenticated server publicly.**
 
