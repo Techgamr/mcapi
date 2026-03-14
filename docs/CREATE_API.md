@@ -4,6 +4,8 @@
 
 The Create Railways API provides endpoints for managing railway stations and trains within the Create mod ecosystem.
 
+This documentation should work with the server shown in the `example-worker.ts` worker.
+
 ---
 
 ## Authentication
@@ -37,7 +39,7 @@ You can take ownership of a train in-game by disassembling and reassembling it a
 Returns a list of all railway stations across all track networks.
 
 ```
-GET /createmod/stations
+GET /stations
 ```
 
 **Response:** `200 OK`
@@ -78,7 +80,7 @@ GET /createmod/stations
 Returns all trains accessible to the authenticated user.
 
 ```
-GET /createmod/train
+GET /train
 ```
 
 **Response:** `200 OK`
@@ -139,7 +141,7 @@ GET /createmod/train
 Updates runtime properties for multiple trains in a single request.
 
 ```
-POST /createmod/train
+POST /train
 Content-Type: application/json
 ```
 
@@ -194,7 +196,7 @@ Content-Type: application/json
 Returns a specific train by UUID.
 
 ```
-GET /createmod/train/{id}
+GET /train/{id}
 ```
 
 **Path Parameters:**
@@ -242,7 +244,7 @@ GET /createmod/train/{id}
 Updates runtime properties for a specific train.
 
 ```
-POST /createmod/train/{id}
+POST /train/{id}
 Content-Type: application/json
 ```
 
@@ -298,7 +300,7 @@ Content-Type: application/json
 Returns the UUID(s) of all trains with a specific name accessible to the authenticated user.
 
 ```
-GET /createmod/train/by-name/{name}
+GET /train/by-name/{name}
 ```
 
 **Path Parameters:**
