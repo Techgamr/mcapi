@@ -237,7 +237,7 @@ public class ApiServer {
                 return Create.RAILWAYS.trains.entrySet().stream()
                         .filter(v -> {
                             Train train = v.getValue();
-                            return callingUuid.equals(NULL_UUID) || (train.owner != null && train.owner.equals(callingUuid))
+                            return (callingUuid.equals(NULL_UUID) || (train.owner != null && train.owner.equals(callingUuid)))
                                     && uuids.contains(v.getKey().toString());
                         })
                         .map(train -> jsonToTrain(train.getValue(), rootNode.get(train.getKey().toString())))
@@ -271,7 +271,7 @@ public class ApiServer {
                 Optional<Train> train = Create.RAILWAYS.trains.entrySet().stream()
                         .filter(entry -> {
                             Train t = entry.getValue();
-                            return callingUuid.equals(NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid))
+                            return (callingUuid.equals(NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid)))
                                     && entry.getKey().equals(trainUuid);
                         })
                         .map(Map.Entry::getValue)
@@ -307,7 +307,7 @@ public class ApiServer {
                 return Create.RAILWAYS.trains.entrySet().stream()
                         .filter(entry -> {
                             Train t = entry.getValue();
-                            return callingUuid.equals(NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid))
+                            return (callingUuid.equals(NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid)))
                                     && entry.getKey().equals(trainUuid);
                         })
                         .map(Map.Entry::getValue)
@@ -334,7 +334,7 @@ public class ApiServer {
                 return Create.RAILWAYS.trains.entrySet().stream()
                         .filter(entry -> {
                             Train t = entry.getValue();
-                            return callingUuid.equals(NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid))
+                            return (callingUuid.equals(NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid)))
                                     && entry.getValue().name.getString().equals(trainName);
                         })
                         .map(Map.Entry::getKey)
