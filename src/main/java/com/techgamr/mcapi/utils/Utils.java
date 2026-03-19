@@ -1,4 +1,4 @@
-package com.techgamr.mcapi;
+package com.techgamr.mcapi.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
 import java.util.Base64;
@@ -46,6 +47,25 @@ public class Utils {
             return CompoundTag.CODEC
                     .parse(JsonOps.INSTANCE, JsonParser.parseString(jsonString))
                     .getOrThrow(false, s -> LOGGER.error("Error deserialising NBT: {}", s));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Component jsonToComponent(String jsonString) {
+        try {
+            return Component.Serializer.fromJson(jsonString);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static JsonNode componentToJson(Component component) {
+        try {
+            return OBJECT_MAPPER
+                    .readTree(
+                            Component.Serializer.toStableJson(component)
+                    );
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

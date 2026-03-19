@@ -13,7 +13,7 @@ import com.simibubi.create.content.trains.graph.TrackNodeLocation;
 import com.simibubi.create.content.trains.schedule.Schedule;
 import com.simibubi.create.content.trains.signal.TrackEdgePoint;
 import com.simibubi.create.content.trains.station.GlobalStation;
-import com.techgamr.mcapi.Utils;
+import com.techgamr.mcapi.utils.Utils;
 import com.techgamr.mcapi.server.Auth;
 import com.techgamr.mcapi.server.ServerUtils;
 import io.javalin.http.Context;

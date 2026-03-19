@@ -1,38 +1,43 @@
 package com.techgamr.mcapi.server.controllers;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.logging.LogUtils;
-import com.techgamr.mcapi.Utils;
+import com.techgamr.mcapi.chat.ChatHandler;
+import com.techgamr.mcapi.chat.StoredChatMessage;
+import com.techgamr.mcapi.utils.Utils;
 import com.techgamr.mcapi.server.Auth;
 import com.techgamr.mcapi.server.ServerUtils;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-import io.javalin.http.InternalServerErrorResponse;
-import io.netty.buffer.Unpooled;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.PlayerChatMessage;
-import net.minecraft.network.protocol.game.ServerboundChatPacket;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.GameProfileCache;
-import net.minecraft.world.entity.player.Player;
-import org.slf4j.Logger;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public class ChatController {
+    public static void getChat(Context ctx) {
+        // try and get a specified length parameter
+        var lenParam = ctx.queryParam("l");
+        var requestedLength = -1;
+        if (lenParam != null) {
+            try {
+                requestedLength = Integer.parseInt(lenParam);
+            } catch (NumberFormatException e) {
+                throw new BadRequestResponse("Length param l was not an integer");
+            }
+        }
+        ctx.status(HttpStatus.OK).json(ChatHandler.getAllMessages(requestedLength));
+    }
+
     public static void sendBroadcast(Context ctx) {
         UUID callingUuid = Auth.getUuid(ctx);
         String body = ctx.body();
         Component message = null;
         try {
-            message = Component.Serializer.fromJson(body);
+            message = Utils.jsonToComponent(body);
         } catch (Exception e) {
             // do nothing
         }
@@ -42,17 +47,22 @@ public class ChatController {
         Component finalMessage = message;
         ctx.future(() -> ServerUtils.executeOnServer(ctx, srv -> {
             Component fullMessage = finalMessage;
+            String playerName = null;
             if (callingUuid != null && !callingUuid.equals(Utils.NULL_UUID)) {
-                String playerName = callingUuid.toString();
+                String playerNameOrUuid = callingUuid.toString();
                 GameProfileCache profileCache = srv.getProfileCache();
                 if (profileCache != null) {
                     Optional<GameProfile> profile = profileCache.get(callingUuid);
                     if (profile.isPresent()) {
                         playerName = profile.get().getName();
+                        playerNameOrUuid = playerName;
                     }
                 }
-                fullMessage = Component.literal("[" + playerName + " via API]: ").append(fullMessage);
+                fullMessage = Component.literal("<" + playerNameOrUuid + " via API> ").append(fullMessage);
             }
+            // add to the ChatHandler's list
+            ChatHandler.addMessage(new StoredChatMessage(callingUuid, playerName, finalMessage, finalMessage.getString(), true));
+            // broadcast to all players
             srv.getPlayerList().broadcastSystemMessage(fullMessage, false);
         }).thenAccept(pl -> ctx.status(HttpStatus.OK)).exceptionally(e -> {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).json(Map.of("error", e.getMessage()));
@@ -92,7 +102,7 @@ public class ChatController {
                         playerName = profile.get().getName();
                     }
                 }
-                fullMessage = Component.literal("[" + playerName + " via API]: ").append(fullMessage);
+                fullMessage = Component.literal("<" + playerName + " via API> ").append(fullMessage);
             }
             if (finalUuid != null) {
                 Objects.requireNonNull(srv.getPlayerList().getPlayer(finalUuid)).sendSystemMessage(fullMessage);

@@ -2,7 +2,7 @@ package com.techgamr.mcapi.server;
 
 import com.mojang.logging.LogUtils;
 import com.techgamr.mcapi.McApi;
-import com.techgamr.mcapi.Utils;
+import com.techgamr.mcapi.utils.Utils;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 

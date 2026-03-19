@@ -147,17 +147,16 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
+    shade "org.apache.commons:commons-collections4:${commons_version}"
+    additionalRuntimeClasspath "org.apache.commons:commons-collections4:${commons_version}"
     // Javalin
-    shade("io.javalin:javalin:${javalin_version}")
-    shade("com.fasterxml.jackson.core:jackson-core:${jackson_version}")
-    shade("com.fasterxml.jackson.core:jackson-databind:${jackson_version}")
+    shade "io.javalin:javalin:${javalin_version}"
+    shade "com.fasterxml.jackson.core:jackson-core:${jackson_version}"
+    shade "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     // this fixes it in dev
-    additionalRuntimeClasspath("io.javalin:javalin:${javalin_version}")
-    additionalRuntimeClasspath("com.fasterxml.jackson.core:jackson-core:${jackson_version}")
-    additionalRuntimeClasspath("com.fasterxml.jackson.core:jackson-databind:${jackson_version}")
-//    annotationProcessor("io.javalin.community.openapi:openapi-annotation-processor:${javalin_version}")
-//    jarJar(implementation("io.javalin.community.openapi:javalin-openapi-plugin:${javalin_version}"))
-//    additionalRuntimeClasspath("io.javalin.community.openapi:javalin-openapi-plugin:${javalin_version}")
+    additionalRuntimeClasspath "io.javalin:javalin:${javalin_version}"
+    additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-core:${jackson_version}"
+    additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
 
     // Create
     modImplementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }

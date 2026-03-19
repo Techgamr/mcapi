@@ -34,6 +34,7 @@ public class ApiServer {
                     });
                 });
                 path("chat", () -> {
+                    get(ChatController::getChat, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                     post(ChatController::sendBroadcast, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                     path("{player}", () -> {
                         post(ChatController::sendMessage, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
