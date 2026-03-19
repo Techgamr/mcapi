@@ -3,6 +3,8 @@ package com.techgamr.mcapi;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.logging.LogUtils;
+import com.techgamr.mcapi.server.Auth;
+import com.techgamr.mcapi.server.ApiServer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -72,7 +74,7 @@ public class McApi {
                 .executes(context -> {
                     String apiKey;
                     try {
-                        apiKey = ApiKeyManager.generateApiKey(Objects.requireNonNull(context.getSource().getPlayer()).getUUID());
+                        apiKey = Auth.generateApiKey(Objects.requireNonNull(context.getSource().getPlayer()).getUUID());
                     } catch (Exception e) {
                         UUID exUuid = UUID.randomUUID();
                         LOGGER.error("Failed to regenerate API key (Error {})", exUuid, e);
