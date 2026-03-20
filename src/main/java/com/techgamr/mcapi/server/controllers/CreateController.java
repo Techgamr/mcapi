@@ -18,6 +18,7 @@ import com.techgamr.mcapi.server.Auth;
 import com.techgamr.mcapi.server.ServerUtils;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -50,14 +51,17 @@ public class CreateController {
         }));
     }
 
+    private static boolean filterUUID(@NotNull UUID callingUuid, Map.@NotNull Entry<UUID, Train> v) {
+        Train train = v.getValue();
+        return callingUuid.equals(Utils.NULL_UUID) || (train.owner != null && train.owner.equals(callingUuid));
+    }
+
     public static void getTrains(Context ctx) {
         UUID callingUuid = Auth.getUuid(ctx);
+        assert callingUuid != null;
         ctx.future(() -> ServerUtils.executeOnServer(ctx, srv -> {
             return Create.RAILWAYS.trains.entrySet().stream()
-                    .filter(v -> {
-                        Train train = v.getValue();
-                        return callingUuid.equals(Utils.NULL_UUID) || (train.owner != null && train.owner.equals(callingUuid));
-                    })
+                    .filter(v -> filterUUID(callingUuid, v))
                     .collect(Collectors.toMap(Map.Entry::getKey, v -> trainToJson(v.getValue())));
         }).thenAccept(result -> ctx.status(HttpStatus.OK).json(result)).exceptionally(e -> {
             ctx.status(HttpStatus.INTERNAL_SERVER_ERROR).json(Map.of("error", e.getMessage()));
@@ -80,13 +84,10 @@ public class CreateController {
         rootNode.fieldNames().forEachRemaining(uuids::add);
 
         UUID callingUuid = Auth.getUuid(ctx);
+        assert callingUuid != null;
         ctx.future(() -> ServerUtils.<@Nullable String>executeOnServer(ctx, srv -> {
             return Create.RAILWAYS.trains.entrySet().stream()
-                    .filter(v -> {
-                        Train train = v.getValue();
-                        return (callingUuid.equals(Utils.NULL_UUID) || (train.owner != null && train.owner.equals(callingUuid)))
-                                && uuids.contains(v.getKey().toString());
-                    })
+                    .filter(v -> filterUUID(callingUuid, v) && uuids.contains(v.getKey().toString()))
                     .map(train -> jsonToTrain(train.getValue(), rootNode.get(train.getKey().toString())))
                     .collect(Collectors.collectingAndThen(
                             Collectors.joining(" "),
@@ -113,13 +114,10 @@ public class CreateController {
         }
 
         UUID callingUuid = Auth.getUuid(ctx);
+        assert callingUuid != null;
         ctx.future(() -> ServerUtils.<@Nullable JsonNode>executeOnServer(ctx, srv -> {
             Optional<Train> train = Create.RAILWAYS.trains.entrySet().stream()
-                    .filter(entry -> {
-                        Train t = entry.getValue();
-                        return (callingUuid.equals(Utils.NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid)))
-                                && entry.getKey().equals(trainUuid);
-                    })
+                    .filter(entry -> filterUUID(callingUuid, entry) && entry.getKey().equals(trainUuid))
                     .map(Map.Entry::getValue)
                     .findFirst();
             return train.map(CreateController::trainToJson).orElse(null);
@@ -150,13 +148,10 @@ public class CreateController {
         JsonNode jsonNode = Utils.OBJECT_MAPPER.readTree(ctx.body());
 
         UUID callingUuid = Auth.getUuid(ctx);
+        assert callingUuid != null;
         ctx.future(() -> ServerUtils.<@Nullable String>executeOnServer(ctx, srv -> {
             return Create.RAILWAYS.trains.entrySet().stream()
-                    .filter(entry -> {
-                        Train t = entry.getValue();
-                        return (callingUuid.equals(Utils.NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid)))
-                                && entry.getKey().equals(trainUuid);
-                    })
+                    .filter(entry -> filterUUID(callingUuid, entry) && entry.getKey().equals(trainUuid))
                     .map(Map.Entry::getValue)
                     .findFirst()
                     .map(train -> jsonToTrain(train, jsonNode))
@@ -176,13 +171,10 @@ public class CreateController {
         String trainName = ctx.pathParam("name");
 
         UUID callingUuid = Auth.getUuid(ctx);
+        assert callingUuid != null;
         ctx.future(() -> ServerUtils.executeOnServer(ctx, srv -> {
             return Create.RAILWAYS.trains.entrySet().stream()
-                    .filter(entry -> {
-                        Train t = entry.getValue();
-                        return (callingUuid.equals(Utils.NULL_UUID) || (t.owner != null && t.owner.equals(callingUuid)))
-                                && entry.getValue().name.getString().equals(trainName);
-                    })
+                    .filter(entry -> filterUUID(callingUuid, entry) && entry.getValue().name.getString().equals(trainName))
                     .map(Map.Entry::getKey)
                     .toList();
         }).thenAccept(result -> ctx.status(HttpStatus.OK).json(result)).exceptionally(e -> {
