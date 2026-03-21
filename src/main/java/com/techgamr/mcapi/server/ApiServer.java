@@ -46,7 +46,7 @@ public class ApiServer {
                     });
                     path("train", () -> {
                         get(CreateController::getTrains, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
-                        post(CreateController::setTrains, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
+                        post(CreateController::setTrain, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                         path("{id}", () -> {
                             get(CreateController::getTrain, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                             post(CreateController::setTrain, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);

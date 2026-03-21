@@ -150,6 +150,7 @@ Content-Type: application/json
 ```json5
 {
   "train-uuid-1": {
+    "updateOnEntry": 1,
     "runtime": {
       "paused": true,
       "currentEntry": 3,
@@ -169,14 +170,15 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| Field                    | Type    | Description                                 |
-|--------------------------|---------|---------------------------------------------|
-| `{trainId}`              | Object  | Train UUID as key                           |
-| `runtime`                | Object  | Runtime properties to update (all optional) |
-| `runtime.schedule`       | Object  | NBT-encoded schedule data (null to clear)   |
-| `runtime.paused`         | Boolean | Pause/resume the train                      |
-| `runtime.currentEntry`   | Integer | Set the current schedule entry              |
-| `runtime.isAutoSchedule` | Boolean | Enable/disable automatic scheduling         |
+| Field                    | Type                 | Description                                                                                                                                                   |
+|--------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `{trainId}`              | Object               | Train UUID as key                                                                                                                                             |
+| `updateOnEntry`          | Integer or Integer[] | A single integer, or list of integers, representing currentEntry, which the schedule will only be updated once the train hits the first one of those entries. |
+| `runtime`                | Object               | Runtime properties to update (all optional)                                                                                                                   |
+| `runtime.schedule`       | Object               | NBT-encoded schedule data (null to clear)                                                                                                                     |
+| `runtime.paused`         | Boolean              | Pause/resume the train                                                                                                                                        |
+| `runtime.currentEntry`   | Integer              | Set the current schedule entry                                                                                                                                |
+| `runtime.isAutoSchedule` | Boolean              | Enable/disable automatic scheduling                                                                                                                           |
 
 **Response:** `204 No Content` (on success)
 
@@ -258,6 +260,7 @@ Content-Type: application/json
 
 ```json5
 {
+  "updateOnEntry": [1, 2],
   "runtime": {
     "paused": true,
     "currentEntry": 3,
@@ -271,13 +274,14 @@ Content-Type: application/json
 
 **Request Fields:**
 
-| Field                    | Type    | Description                                 |
-|--------------------------|---------|---------------------------------------------|
-| `runtime`                | Object  | Runtime properties to update (all optional) |
-| `runtime.schedule`       | Object  | NBT-encoded schedule data (null to clear)   |
-| `runtime.paused`         | Boolean | Pause/resume the train                      |
-| `runtime.currentEntry`   | Integer | Set the current schedule entry              |
-| `runtime.isAutoSchedule` | Boolean | Enable/disable automatic scheduling         |
+| Field                    | Type                 | Description                                                                                                                                                   |
+|--------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `updateOnEntry`          | Integer or Integer[] | A single integer, or list of integers, representing currentEntry, which the schedule will only be updated once the train hits the first one of those entries. |
+| `runtime`                | Object               | Runtime properties to update (all optional)                                                                                                                   |
+| `runtime.schedule`       | Object               | NBT-encoded schedule data (null to clear)                                                                                                                     |
+| `runtime.paused`         | Boolean              | Pause/resume the train                                                                                                                                        |
+| `runtime.currentEntry`   | Integer              | Set the current schedule entry                                                                                                                                |
+| `runtime.isAutoSchedule` | Boolean              | Enable/disable automatic scheduling                                                                                                                           |
 
 **Response:** `204 No Content` (on success)
 
@@ -325,17 +329,3 @@ GET /train/by-name/{name}
 | `500 Internal Server Error` | `{"error": "error message"}` |
 
 ---
-
-## Notes
-
-### Error Handling
-
-All endpoints include comprehensive error handling with appropriate HTTP status codes and JSON error messages.
-
-**Error JSON Format**:
-
-```json
-{
-  "error": "<message>"
-}
-```

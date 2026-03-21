@@ -13,14 +13,11 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(modid = McApi.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ChatHandler {
-    private static final Logger LOGGER = LogUtils.getLogger();
-
     private static final CircularFifoQueue<StoredChatMessage> queue = new CircularFifoQueue<>(100);
 
     @SubscribeEvent
     public static void onServerChat(ServerChatEvent event) {
         addMessage(new StoredChatMessage(event));
-        LOGGER.info("CHAT MESSAGE: {}", event.getRawText());
     }
 
     public static void addMessage(StoredChatMessage message) {
