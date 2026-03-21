@@ -139,7 +139,12 @@ public class CreateController {
                                 JsonNode pausedNode = runtimeNode.get("paused");
                                 if (scheduleDataNode != null) {
                                     boolean isAutoSchedule = runtimeNode.has("isAutoSchedule") && isAutoScheduleNode.booleanValue();
-                                    obj.train.runtime.setSchedule(scheduleDataNode.isNull() ? null : Schedule.fromTag(Utils.jsonToNbt(scheduleDataNode.toString())), isAutoSchedule);
+                                    Schedule schedule = scheduleDataNode.isNull() ? null : Schedule.fromTag(Utils.jsonToNbt(scheduleDataNode.toString()));
+                                    // enable in-place schedule changes without changing progress when no updateOnEntry is specified and savedProgress == 0 (default)
+                                    if (updateOnEntry.isEmpty() && schedule != null && schedule.savedProgress == 0) {
+                                        schedule.savedProgress = obj.train.runtime.currentEntry;
+                                    }
+                                    obj.train.runtime.setSchedule(schedule, isAutoSchedule);
                                 } else if (isAutoScheduleNode != null) {
                                     obj.train.runtime.isAutoSchedule = isAutoScheduleNode.booleanValue();
                                 }
@@ -156,6 +161,8 @@ public class CreateController {
                         }
                     });
                 });
+
+        ctx.status(HttpStatus.ACCEPTED);
     }
 
     public static void getTrain(Context ctx) {
