@@ -12,6 +12,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.forgespi.language.IModInfo;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -83,11 +84,13 @@ public class InfoController {
         }).orElse(null);
         if (logoPath == null) {
             throw new NotFoundResponse();
-        } else {
+        } else try {
             ctx
                     .header("Cache-Control", "public, max-age=86400") // 1 day
                     .contentType(Objects.requireNonNullElse(Files.probeContentType(logoPath), "application/octet-stream"))
                     .status(HttpStatus.OK).result(Files.newInputStream(logoPath));
+        } catch (FileNotFoundException e) {
+            throw new NotFoundResponse();
         }
     }
 
