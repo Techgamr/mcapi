@@ -65,7 +65,12 @@ public class InfoController {
                             "version", mod.getVersion().toString()
                     ))
                     .toList();
-            return Map.of("mods", modList, "player", playerData, "onlinePlayers", onlinePlayers);
+            return Map.of(
+                    "mods", modList,
+                    "player", playerData,
+                    "onlinePlayers", onlinePlayers,
+                    "motd", srv.getMotd()
+            );
         }).thenAccept(res -> {
             ctx.status(HttpStatus.OK).json(res);
         }));
