@@ -25,6 +25,12 @@ public class ApiServer {
             config.appData(CTX_APPDATA_CONFIG_KEY, serverCfg);
             config.routes.beforeMatched(Auth::handleAccess);
             config.routes.apiBuilder(() -> {
+                config.bundledPlugins.enableCors(cors -> {
+                    cors.addRule(it -> {
+                        it.anyHost();
+                        //it.reflectClientOrigin = true;
+                    });
+                });
                 get("/", ctx -> ctx.json("hello world!"), Role.OPEN);
                 get("/auth/{hash}", Auth::handleAuthApi, Role.AUTHORISED_PROXY);
                 path("players", () -> {
