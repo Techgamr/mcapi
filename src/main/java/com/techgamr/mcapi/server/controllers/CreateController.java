@@ -217,6 +217,7 @@ public class CreateController {
                 Map.entry("graph", train.graph != null ? train.graph.id : Utils.NULL_UUID),
                 Map.entry("derailed", train.derailed),
                 Map.entry("currentlyBackwards", train.currentlyBackwards),
+                Map.entry("icon", train.icon.getId().toString()),
                 Map.entry("runtime", Map.ofEntries(
                         Map.entry("schedule", schedule != null ? Utils.nbtToJson(schedule.write()) : NullNode.instance),
                         Map.entry("completed", train.runtime.completed),
