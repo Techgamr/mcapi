@@ -153,10 +153,12 @@ dependencies {
     shade "io.javalin:javalin:${javalin_version}"
     shade "com.fasterxml.jackson.core:jackson-core:${jackson_version}"
     shade "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    shade "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson_version}"
     // this fixes it in dev
     additionalRuntimeClasspath "io.javalin:javalin:${javalin_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-core:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    additionalRuntimeClasspath "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson_version}"
 
     // Create
     modImplementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
@@ -219,6 +221,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             create_version_range     : create_version_range,
             mod_id                   : mod_id,
             mod_name                 : mod_name,
+            mod_url                  : mod_url,
             mod_license              : mod_license,
             mod_version              : mod_version,
             mod_authors              : mod_authors,

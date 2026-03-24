@@ -115,13 +115,7 @@ public class Auth {
      * The Proxy Auth API endpoint handler.
      */
     public static void handleAuthApi(@NotNull Context ctx) {
-        var config = ctx.appData(ApiServer.CTX_APPDATA_CONFIG_KEY);
-        if (!config.proxy_auth) {
-            LOGGER.error("Proxy Auth API endpoint called with proxy auth disabled");
-            throw new InternalServerErrorResponse();
-        }
-
-        String uuid = Auth.getUuid(ctx.pathParam("hash"));
+        String uuid = getUuid(ctx.pathParam("hash"));
         if (uuid == null) {
             throw new NotFoundResponse();
         } else {
