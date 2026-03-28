@@ -36,6 +36,7 @@ public class ApiServer {
                     cors.addRule(it -> {
 //                        it.anyHost();
                         it.reflectClientOrigin = true;
+                        it.maxAge = 3600;
                     });
                 });
                 get("/", ctx -> ctx.json("hello world!"), Role.OPEN);
