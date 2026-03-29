@@ -6,9 +6,15 @@ import com.simibubi.create.content.trains.entity.TravellingPoint;
 import com.simibubi.create.content.trains.graph.TrackEdge;
 import com.simibubi.create.content.trains.graph.TrackNode;
 import com.simibubi.create.content.trains.graph.TrackNodeLocation;
-import com.techgamr.mcapi.ctm.math.TrackMath;
+import com.techgamr.mcapi.ctm.math.BezierCurve;
+import com.techgamr.mcapi.ctm.math.Line;
+import com.techgamr.mcapi.ctm.math.Track;
+import com.techgamr.mcapi.ctm.model.CreateTrain;
+import com.techgamr.mcapi.ctm.model.DimensionLocation;
+import com.techgamr.mcapi.ctm.model.Point;
+import com.techgamr.mcapi.ctm.model.Portal;
+import com.techgamr.mcapi.ctm.model.TrainCar;
 import net.createmod.catnip.data.Couple;
-import com.techgamr.mcapi.ctm.models.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -19,8 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public class TrackWatcherExtensions {
-
+public class TrackWatcherUtils {
     public static <T> void replaceWith(Set<T> target, Collection<T> other) {
         target.retainAll(other);
         target.addAll(other);
@@ -47,11 +52,11 @@ public class TrackWatcherExtensions {
         return toSendable(location.getLocation());
     }
 
-    public static TrackMath.Track getPath(TrackEdge edge) {
+    public static Track getPath(TrackEdge edge) {
         if (edge.isTurn()) {
-            return TrackMath.BezierCurve.from(edge.getTurn(), edge.node1.getLocation().dimension.toString());
+            return BezierCurve.from(edge.getTurn(), edge.node1.getLocation().dimension.toString());
         } else {
-            return new TrackMath.Line(
+            return new Line(
                     edge.node1.getLocation().dimension.toString(),
                     edge.node1.getLocation().getLocation(),
                     edge.node2.getLocation().getLocation()
@@ -88,14 +93,13 @@ public class TrackWatcherExtensions {
         );
     }
 
-    public static TrainCar getCarriageSendable(Carriage carriage) {
+    public static TrainCar getCarriageSendable(TrackWatcher watcher, Carriage carriage) {
         Portal portal = null;
 
         if (carriage.getLeadingPoint() != null && carriage.getTrailingPoint() != null) {
             List<Portal> portals = new ArrayList<>();
             for (var blockId : carriage.train.occupiedSignalBlocks.keySet()) {
-                // TODO
-//                portals.addAll(TrackMap.watcher.portalsInBlock(blockId));
+                portals.addAll(watcher.portalsInBlock(blockId));
             }
 
             String leadingDim = carriage.getLeadingPoint().node1 != null
@@ -121,10 +125,10 @@ public class TrackWatcherExtensions {
         );
     }
 
-    public static CreateTrain getTrainSendable(Train train) {
+    public static CreateTrain getTrainSendable(TrackWatcher watcher, Train train) {
         List<TrainCar> cars = new ArrayList<>();
         for (Carriage carriage : train.carriages) {
-            cars.add(getCarriageSendable(carriage));
+            cars.add(getCarriageSendable(watcher, carriage));
         }
 
         return new CreateTrain(

@@ -8,39 +8,38 @@ import com.simibubi.create.content.trains.graph.TrackGraph;
 import com.simibubi.create.content.trains.graph.TrackNode;
 import com.simibubi.create.content.trains.entity.Train;
 import com.simibubi.create.content.trains.graph.TrackNodeLocation;
-import com.simibubi.create.content.trains.signal.SignalBlock.SignalType;
-import com.simibubi.create.content.trains.signal.SignalBlockEntity.SignalState;
 import com.simibubi.create.content.trains.signal.SignalBoundary;
 import com.simibubi.create.content.trains.signal.SignalEdgeGroup;
 import com.simibubi.create.content.trains.station.GlobalStation;
-import com.techgamr.mcapi.ctm.math.TrackMath;
-import com.techgamr.mcapi.ctm.models.*;
-import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import com.techgamr.mcapi.ctm.math.TrackDivision;
+import com.techgamr.mcapi.ctm.model.BlockStatus;
+import com.techgamr.mcapi.ctm.model.Edge;
+import com.techgamr.mcapi.ctm.model.Network;
+import com.techgamr.mcapi.ctm.model.Portal;
+import com.techgamr.mcapi.ctm.model.SignalStatus;
+import com.techgamr.mcapi.ctm.model.TrainStatus;
 import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.techgamr.mcapi.ctm.math.TrackMath.Track;
+import com.techgamr.mcapi.ctm.math.Track;
 
 public class TrackWatcher {
-    private boolean enable = true;
-    private long watchIntervalMillis = 500; // 0.5 seconds
     private volatile boolean stopping = false;
-    private Thread watchThread;
+    private final Thread watchThread;
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final GlobalRailwayManager RR = Create.RAILWAYS;
+    public static final GlobalRailwayManager RR = Create.RAILWAYS;
 
-    public void start() {
-        if (!enable) {
-            return;
-        }
+    public TrackWatcher() {
+        this(500L);
+    }
 
+    public TrackWatcher(long watchIntervalMillis) {
         watchThread = new Thread(() -> {
             try {
-                watchLoop();
+                watchLoop(watchIntervalMillis);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -49,10 +48,6 @@ public class TrackWatcher {
     }
 
     public void stop() {
-        if (!enable) {
-            return;
-        }
-
         stopping = true;
         if (watchThread != null) {
             try {
@@ -64,231 +59,15 @@ public class TrackWatcher {
         stopping = false;
     }
 
-    private void watchLoop() throws InterruptedException {
+    private void watchLoop(long watchIntervalMillis) throws InterruptedException {
         while (!stopping) {
             try {
                 update();
             } catch (Exception e) {
-                LOGGER.warn("Exception during update loop");
-                e.printStackTrace();
+                LOGGER.warn("Exception during track watcher update loop", e);
             }
+            //noinspection BusyWait
             Thread.sleep(watchIntervalMillis);
-        }
-    }
-
-    public static class CreateStation {
-        private final GlobalStation internal;
-        private final TrackEdge edge;
-
-        public CreateStation(GlobalStation internal, TrackEdge edge) {
-            this.internal = internal;
-            this.edge = edge;
-        }
-
-        public UUID getId() {
-            return internal.id;
-        }
-
-        public String getName() {
-            return internal.name;
-        }
-
-        public String getDimension() {
-            return edge.node1.getLocation().dimension.toString();
-        }
-
-        public Vec3 getLocation() {
-            return TrackMath.locationOn(internal, edge);
-        }
-
-        public float getAngle() {
-            return (float) TrackMath.angleOn(internal, edge);
-        }
-
-        public boolean isAssembling() {
-            return internal.assembling;
-        }
-
-        public Station getSendable() {
-            return new Station(
-                    getId(),
-                    getName(),
-                    getDimension(),
-                    TrackWatcherExtensions.toSendable(getLocation()),
-                    getAngle(),
-                    isAssembling()
-            );
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CreateStation that = (CreateStation) o;
-            return Objects.equals(internal, that.internal);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(internal);
-        }
-    }
-
-    public static class CreateSignal {
-        private final SignalBoundary internal;
-        private final TrackEdge edge;
-        private Track forwardSegment;
-        private Track reverseSegment;
-
-        public CreateSignal(SignalBoundary internal, TrackEdge edge) {
-            this.internal = internal;
-            this.edge = edge;
-
-            TrackMath.TrackDivision divided = TrackWatcherExtensions.getPath(edge).divideAt(internal.position / edge.getLength());
-            this.forwardSegment = divided.first;
-            this.reverseSegment = divided.second;
-        }
-
-        public UUID getId() {
-            return internal.id;
-        }
-
-        public String getDimension() {
-            return edge.node1.getLocation().dimension.toString();
-        }
-
-        public Vec3 getLocation() {
-            return TrackMath.locationOn(internal, edge);
-        }
-
-        public float getForwardAngle() {
-            return (float) TrackMath.angleOn(internal, edge);
-        }
-
-        public float getReverseAngle() {
-            return getForwardAngle() + 180;
-        }
-
-        @Nullable
-        public SignalType getForwardType() {
-            return internal.types.getFirst();
-        }
-
-        @Nullable
-        public SignalType getReverseType() {
-            return internal.types.getSecond();
-        }
-
-        @Nullable
-        public SignalState getForwardState() {
-            return internal.cachedStates.getFirst();
-        }
-
-        @Nullable
-        public SignalState getReverseState() {
-            return internal.cachedStates.getSecond();
-        }
-
-        @Nullable
-        public SignalEdgeGroup getForwardGroup() {
-            return RR.signalEdgeGroups.get(internal.groups.getFirst());
-        }
-
-        @Nullable
-        public SignalEdgeGroup getReverseGroup() {
-            return RR.signalEdgeGroups.get(internal.groups.getSecond());
-        }
-
-        public Signal getSendable() {
-            SignalSide forward = null;
-            if (getForwardState() != null && getForwardState() != SignalState.INVALID) {
-                forward = new SignalSide(
-                        getForwardType(),
-                        getForwardState(),
-                        getForwardAngle(),
-                        getForwardGroup() != null ? getForwardGroup().id : null
-                );
-            }
-
-            SignalSide reverse = null;
-            if (getReverseState() != null && getReverseState() != SignalState.INVALID) {
-                reverse = new SignalSide(
-                        getReverseType(),
-                        getReverseState(),
-                        getReverseAngle(),
-                        getReverseGroup() != null ? getReverseGroup().id : null
-                );
-            }
-
-            return new Signal(
-                    getId(),
-                    getDimension(),
-                    TrackWatcherExtensions.toSendable(getLocation()),
-                    forward,
-                    reverse
-            );
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CreateSignal that = (CreateSignal) o;
-            return Objects.equals(internal, that.internal);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(internal);
-        }
-    }
-
-    public static class CreateSignalBlock {
-        private final SignalEdgeGroup internal;
-        public final List<Track> segments = new ArrayList<>();
-        public final Set<Portal> portals = new HashSet<>();
-
-        public CreateSignalBlock(SignalEdgeGroup internal) {
-            this.internal = internal;
-        }
-
-        public UUID getId() {
-            return internal.id;
-        }
-
-        public boolean isOccupied() {
-            return RR.trains.values().stream()
-                    .anyMatch(train -> train.occupiedSignalBlocks.containsKey(getId()));
-        }
-
-        public boolean isReserved() {
-            return RR.trains.values().stream()
-                    .anyMatch(train -> train.reservedSignalBlocks.contains(getId()));
-        }
-
-        public Block getSendable() {
-            return new Block(
-                    getId(),
-                    isOccupied(),
-                    isReserved(),
-                    segments.stream()
-                            .map(Track::getSendable)
-                            .toList()
-            );
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CreateSignalBlock that = (CreateSignalBlock) o;
-            return Objects.equals(internal, that.internal) &&
-                    Objects.equals(segments, that.segments);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(internal);
         }
     }
 
@@ -309,7 +88,7 @@ public class TrackWatcher {
         List<Portal> portalEdges = new ArrayList<>();
 
         for (TrackEdge edge : edges) {
-            Object sendable = TrackWatcherExtensions.getEdgeSendable(edge);
+            Object sendable = TrackWatcherUtils.getEdgeSendable(edge);
             if (sendable instanceof Edge) {
                 trackEdges.add((Edge) sendable);
             } else if (sendable instanceof Portal) {
@@ -338,7 +117,7 @@ public class TrackWatcher {
 
     public TrainStatus getTrainStatus() {
         return new TrainStatus(
-                trains.stream().map(TrackWatcherExtensions::getTrainSendable).toList()
+                trains.stream().map(train -> TrackWatcherUtils.getTrainSendable(this, train)).toList()
         );
     }
 
@@ -402,7 +181,7 @@ public class TrackWatcher {
 
             for (TrackEdge edge : netEdges) {
                 if (edge.isInterDimensional()) {
-                    Object sendable = TrackWatcherExtensions.getEdgeSendable(edge);
+                    Object sendable = TrackWatcherUtils.getEdgeSendable(edge);
                     if (sendable instanceof Portal portal) {
                         UUID blockId = edge.getEdgeData().getEffectiveEdgeGroupId(net);
                         CreateSignalBlock block = thisBlocks.get(blockId);
@@ -429,15 +208,15 @@ public class TrackWatcher {
                             continue;
                         }
 
-                        Track path = TrackWatcherExtensions.getPath(edge);
+                        Track path = TrackWatcherUtils.getPath(edge);
                         List<Track> segments = new ArrayList<>();
 
                         // First segment
                         float firstPos = (float) (signalList.get(0).isPrimary(edge.node2)
                                 ? signalList.get(0).position
                                 : edge.getLength() - signalList.get(0).position);
-                        TrackMath.TrackDivision firstDivide = path.divideAt(firstPos / edge.getLength());
-                        segments.add(firstDivide.first);
+                        TrackDivision firstDivide = path.divideAt(firstPos / edge.getLength());
+                        segments.add(firstDivide.first());
 
                         // Middle segments
                         for (int i = 0; i < signalList.size() - 1; i++) {
@@ -447,22 +226,22 @@ public class TrackWatcher {
                             float rightPos = (float) (rightSig.isPrimary(edge.node2)
                                     ? rightSig.position
                                     : edge.getLength() - rightSig.position);
-                            TrackMath.TrackDivision rightDivide = path.divideAt(rightPos / edge.getLength());
-                            Track rest = rightDivide.first;
+                            TrackDivision rightDivide = path.divideAt(rightPos / edge.getLength());
+                            Track rest = rightDivide.first();
 
                             float leftPos = (float) (leftSig.isPrimary(edge.node2)
                                     ? leftSig.position
                                     : edge.getLength() - leftSig.position);
-                            TrackMath.TrackDivision leftDivide = rest.divideAt(leftPos / edge.getLength());
-                            segments.add(leftDivide.second);
+                            TrackDivision leftDivide = rest.divideAt(leftPos / edge.getLength());
+                            segments.add(leftDivide.second());
                         }
 
                         // Last segment
                         float lastPos = (float) (signalList.get(signalList.size() - 1).isPrimary(edge.node2)
                                 ? signalList.get(signalList.size() - 1).position
                                 : edge.getLength() - signalList.get(signalList.size() - 1).position);
-                        TrackMath.TrackDivision lastDivide = path.divideAt(lastPos / edge.getLength());
-                        segments.add(lastDivide.second);
+                        TrackDivision lastDivide = path.divideAt(lastPos / edge.getLength());
+                        segments.add(lastDivide.second());
 
                         // Assign segments to blocks
                         for (int i = 0; i < signalList.size(); i++) {
@@ -486,7 +265,7 @@ public class TrackWatcher {
                         UUID blockId = edge.getEdgeData().getEffectiveEdgeGroupId(net);
                         CreateSignalBlock block = thisBlocks.get(blockId);
                         if (block != null) {
-                            block.segments.add(TrackWatcherExtensions.getPath(edge));
+                            block.segments.add(TrackWatcherUtils.getPath(edge));
                         }
                     }
                 }
@@ -502,6 +281,6 @@ public class TrackWatcher {
     }
 
     private <T> void replaceSet(Set<T> target, Set<T> source) {
-        TrackWatcherExtensions.replaceWith(target, source);
+        TrackWatcherUtils.replaceWith(target, source);
     }
 }

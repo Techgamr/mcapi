@@ -1,4 +1,4 @@
-package com.techgamr.mcapi.ctm.models;
+package com.techgamr.mcapi.ctm.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.simibubi.create.content.trains.signal.SignalBlock;

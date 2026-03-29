@@ -24,3 +24,8 @@ A simple example for testing is available in [example-worker.ts](example-worker.
 **_MAKE SURE_ to not expose the unauthenticated server publicly.**
 
 **TODO**: Make the host/port configurable, embed token verification into the server optionally.
+
+## Credits
+
+The track watcher code is largely based on [Create: Track Map](https://github.com/jenchanws/create-track-map),
+however has been updated and modified to support Create 6.
