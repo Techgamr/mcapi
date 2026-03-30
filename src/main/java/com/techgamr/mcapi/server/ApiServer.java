@@ -49,8 +49,7 @@ public class ApiServer {
             config.routes.apiBuilder(() -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        it.anyHost();
-//                        it.reflectClientOrigin = true;
+                        it.reflectClientOrigin = true;
                         it.maxAge = 3600;
                     });
                 });
