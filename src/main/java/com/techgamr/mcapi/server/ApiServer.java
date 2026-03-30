@@ -49,8 +49,9 @@ public class ApiServer {
             config.routes.apiBuilder(() -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        it.reflectClientOrigin = true;
+//                        it.reflectClientOrigin = true;
                         it.maxAge = 3600;
+                        it.anyHost();
                     });
                 });
                 get("/", ctx -> {
@@ -99,7 +100,7 @@ public class ApiServer {
                             get(CreateController::getTrainByName, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                         });
                     });
-                    path("track", () -> {
+                    path("ctm", () -> {
                         get("/network", CreateController::trackNetwork, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                         get("/signals", CreateController::trackSignals, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);
                         get("/blocks", CreateController::trackBlocks, Role.USER_LOGGED_IN, Role.AUTHORISED_PROXY);

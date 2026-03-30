@@ -11,6 +11,7 @@ import com.simibubi.create.content.trains.graph.TrackNodeLocation;
 import com.simibubi.create.content.trains.signal.SignalBoundary;
 import com.simibubi.create.content.trains.signal.SignalEdgeGroup;
 import com.simibubi.create.content.trains.station.GlobalStation;
+import com.techgamr.mcapi.ctm.delta.ClientManager;
 import com.techgamr.mcapi.ctm.math.TrackDivision;
 import com.techgamr.mcapi.ctm.model.BlockStatus;
 import com.techgamr.mcapi.ctm.model.Edge;
@@ -18,15 +19,12 @@ import com.techgamr.mcapi.ctm.model.Network;
 import com.techgamr.mcapi.ctm.model.Portal;
 import com.techgamr.mcapi.ctm.model.SignalStatus;
 import com.techgamr.mcapi.ctm.model.TrainStatus;
-import io.javalin.http.Context;
 import io.javalin.http.sse.SseClient;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.techgamr.mcapi.ctm.math.Track;
 
@@ -87,41 +85,25 @@ public class TrackWatcher {
     private final Set<Train> trains = new HashSet<>();
     private final Map<UUID, CreateSignalBlock> blocks = new ConcurrentHashMap<>();
 
-    private final Queue<SseClient> networkClients = new ConcurrentLinkedQueue<>();
-    private final Queue<SseClient> signalClients = new ConcurrentLinkedQueue<>();
-    private final Queue<SseClient> blockClients = new ConcurrentLinkedQueue<>();
-    private final Queue<SseClient> trainClients = new ConcurrentLinkedQueue<>();
-
-    private void sseSendToAll(Object payload, @NotNull Iterable<SseClient> clients) {
-        for (SseClient client : clients) {
-            client.sendEvent(payload);
-        }
-    }
-
-    private void handleSSE(@NotNull SseClient client, @NotNull Queue<SseClient> clients) {
-        client.keepAlive();
-        client.onClose(() -> clients.remove(client));
-        clients.add(client);
-    }
+    private final ClientManager networkClients = new ClientManager();
+    private final ClientManager signalClients = new ClientManager();
+    private final ClientManager blockClients = new ClientManager();
+    private final ClientManager trainClients = new ClientManager();
 
     public void networkSSE(@NotNull SseClient client) {
-        client.sendEvent(getNetwork());
-        handleSSE(client, networkClients);
+        networkClients.handleSubscribe(client);
     }
 
     public void signalSSE(@NotNull SseClient client) {
-        client.sendEvent(getSignalStatus());
-        handleSSE(client, signalClients);
+        signalClients.handleSubscribe(client);
     }
 
     public void blockSSE(@NotNull SseClient client) {
-        client.sendEvent(getBlockStatus());
-        handleSSE(client, blockClients);
+        blockClients.handleSubscribe(client);
     }
 
     public void trainSSE(@NotNull SseClient client) {
-        client.sendEvent(getTrainStatus());
-        handleSSE(client, trainClients);
+        trainClients.handleSubscribe(client);
     }
 
     public Collection<Portal> portalsInBlock(UUID block) {
@@ -326,10 +308,10 @@ public class TrackWatcher {
         trains.addAll(RR.trains.values());
 
         // Update SSE clients
-        sseSendToAll(getNetwork(), networkClients);
-        sseSendToAll(getSignalStatus(), signalClients);
-        sseSendToAll(getBlockStatus(), blockClients);
-        sseSendToAll(getTrainStatus(), trainClients);
+        networkClients.broadcastUpdate(getNetwork());
+        signalClients.broadcastUpdate(getSignalStatus());
+        blockClients.broadcastUpdate(getBlockStatus());
+        trainClients.broadcastUpdate(getTrainStatus());
     }
 
     private <T> void replaceSet(Set<T> target, Set<T> source) {
