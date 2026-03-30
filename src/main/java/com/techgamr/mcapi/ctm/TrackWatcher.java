@@ -18,10 +18,15 @@ import com.techgamr.mcapi.ctm.model.Network;
 import com.techgamr.mcapi.ctm.model.Portal;
 import com.techgamr.mcapi.ctm.model.SignalStatus;
 import com.techgamr.mcapi.ctm.model.TrainStatus;
+import io.javalin.http.Context;
+import io.javalin.http.sse.SseClient;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.techgamr.mcapi.ctm.math.Track;
 
@@ -37,6 +42,7 @@ public class TrackWatcher {
     }
 
     public TrackWatcher(long watchIntervalMillis) {
+        LOGGER.info("Starting track watcher");
         watchThread = new Thread(() -> {
             try {
                 watchLoop(watchIntervalMillis);
@@ -45,9 +51,11 @@ public class TrackWatcher {
             }
         }, "TrackMap watcher");
         watchThread.start();
+        LOGGER.info("Started track watcher");
     }
 
     public void stop() {
+        LOGGER.info("Stopping track watcher");
         stopping = true;
         if (watchThread != null) {
             try {
@@ -57,6 +65,7 @@ public class TrackWatcher {
             }
         }
         stopping = false;
+        LOGGER.info("Stopped track watcher");
     }
 
     private void watchLoop(long watchIntervalMillis) throws InterruptedException {
@@ -77,6 +86,43 @@ public class TrackWatcher {
     private final Set<CreateStation> stations = new HashSet<>();
     private final Set<Train> trains = new HashSet<>();
     private final Map<UUID, CreateSignalBlock> blocks = new ConcurrentHashMap<>();
+
+    private final Queue<SseClient> networkClients = new ConcurrentLinkedQueue<>();
+    private final Queue<SseClient> signalClients = new ConcurrentLinkedQueue<>();
+    private final Queue<SseClient> blockClients = new ConcurrentLinkedQueue<>();
+    private final Queue<SseClient> trainClients = new ConcurrentLinkedQueue<>();
+
+    private void sseSendToAll(Object payload, @NotNull Iterable<SseClient> clients) {
+        for (SseClient client : clients) {
+            client.sendEvent(payload);
+        }
+    }
+
+    private void handleSSE(@NotNull SseClient client, @NotNull Queue<SseClient> clients) {
+        client.keepAlive();
+        client.onClose(() -> clients.remove(client));
+        clients.add(client);
+    }
+
+    public void networkSSE(@NotNull SseClient client) {
+        client.sendEvent(getNetwork());
+        handleSSE(client, networkClients);
+    }
+
+    public void signalSSE(@NotNull SseClient client) {
+        client.sendEvent(getSignalStatus());
+        handleSSE(client, signalClients);
+    }
+
+    public void blockSSE(@NotNull SseClient client) {
+        client.sendEvent(getBlockStatus());
+        handleSSE(client, blockClients);
+    }
+
+    public void trainSSE(@NotNull SseClient client) {
+        client.sendEvent(getTrainStatus());
+        handleSSE(client, trainClients);
+    }
 
     public Collection<Portal> portalsInBlock(UUID block) {
         CreateSignalBlock signalBlock = blocks.get(block);
@@ -278,6 +324,12 @@ public class TrackWatcher {
         // Trains
         trains.clear();
         trains.addAll(RR.trains.values());
+
+        // Update SSE clients
+        sseSendToAll(getNetwork(), networkClients);
+        sseSendToAll(getSignalStatus(), signalClients);
+        sseSendToAll(getBlockStatus(), blockClients);
+        sseSendToAll(getTrainStatus(), trainClients);
     }
 
     private <T> void replaceSet(Set<T> target, Set<T> source) {

@@ -54,10 +54,10 @@ public class TrackWatcherUtils {
 
     public static Track getPath(TrackEdge edge) {
         if (edge.isTurn()) {
-            return BezierCurve.from(edge.getTurn(), edge.node1.getLocation().dimension.toString());
+            return BezierCurve.from(edge.getTurn(), TrackWatcherUtils.dimensionString(edge.node1.getLocation().dimension));
         } else {
             return new Line(
-                    edge.node1.getLocation().dimension.toString(),
+                    TrackWatcherUtils.dimensionString(edge.node1.getLocation().dimension),
                     edge.node1.getLocation().getLocation(),
                     edge.node2.getLocation().getLocation()
             );
@@ -66,7 +66,7 @@ public class TrackWatcherUtils {
 
     public static DimensionLocation getDimensionLocation(TrackNode node) {
         return new DimensionLocation(
-                node.getLocation().dimension.toString(),
+                TrackWatcherUtils.dimensionString(node.getLocation().dimension),
                 toSendable(node.getLocation().getLocation())
         );
     }
@@ -88,7 +88,7 @@ public class TrackWatcherUtils {
             return null;
         }
         return new DimensionLocation(
-                point.node1.getLocation().dimension.toString(),
+                TrackWatcherUtils.dimensionString(point.node1.getLocation().dimension),
                 toSendable(point.getPosition(null))
         );
     }
@@ -103,10 +103,10 @@ public class TrackWatcherUtils {
             }
 
             String leadingDim = carriage.getLeadingPoint().node1 != null
-                    ? carriage.getLeadingPoint().node1.getLocation().dimension.toString()
+                    ? TrackWatcherUtils.dimensionString(carriage.getLeadingPoint().node1.getLocation().dimension)
                     : null;
             String trailingDim = carriage.getTrailingPoint().node1 != null
-                    ? carriage.getTrailingPoint().node1.getLocation().dimension.toString()
+                    ? TrackWatcherUtils.dimensionString(carriage.getTrailingPoint().node1.getLocation().dimension)
                     : null;
 
             for (Portal p : portals) {

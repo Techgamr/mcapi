@@ -19,6 +19,7 @@ public class ServerConfig {
     public String host = "127.0.0.1";
     public int port = 3333;
     public boolean proxy_auth = false;
+    public long track_watch_interval_millis = 500;
 
     public static ServerConfig readFromFile() {
         LOGGER.info("loading config");

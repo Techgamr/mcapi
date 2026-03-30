@@ -27,7 +27,7 @@ public class CreateStation {
     }
 
     public String getDimension() {
-        return edge.node1.getLocation().dimension.toString();
+        return TrackWatcherUtils.dimensionString(edge.node1.getLocation().dimension);
     }
 
     public Vec3 getLocation() {

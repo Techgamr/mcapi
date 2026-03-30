@@ -14,6 +14,7 @@ import com.simibubi.create.content.trains.schedule.ScheduleRuntime;
 import com.simibubi.create.content.trains.signal.TrackEdgePoint;
 import com.simibubi.create.content.trains.station.GlobalStation;
 import com.techgamr.mcapi.ServerTickHandler;
+import com.techgamr.mcapi.server.ApiServer;
 import com.techgamr.mcapi.utils.Utils;
 import com.techgamr.mcapi.server.Auth;
 import com.techgamr.mcapi.server.ServerUtils;
@@ -235,5 +236,21 @@ public class CreateController {
                         ))
                 ))
         ));
+    }
+
+    public static void trackNetwork(@NotNull Context ctx) {
+        ctx.json(ctx.appData(ApiServer.CTX_APPDATA_TRACK_WATCHER_KEY).getNetwork());
+    }
+
+    public static void trackSignals(@NotNull Context ctx) {
+        ctx.json(ctx.appData(ApiServer.CTX_APPDATA_TRACK_WATCHER_KEY).getSignalStatus());
+    }
+
+    public static void trackBlocks(@NotNull Context ctx) {
+        ctx.json(ctx.appData(ApiServer.CTX_APPDATA_TRACK_WATCHER_KEY).getBlockStatus());
+    }
+
+    public static void trackTrains(@NotNull Context ctx) {
+        ctx.json(ctx.appData(ApiServer.CTX_APPDATA_TRACK_WATCHER_KEY).getTrainStatus());
     }
 }
