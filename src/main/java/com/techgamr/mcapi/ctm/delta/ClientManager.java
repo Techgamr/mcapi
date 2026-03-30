@@ -78,19 +78,23 @@ public class ClientManager {
     public void broadcastUpdate(JsonNode newData) {
         currentData = newData;
         for (ConnectedClient client : this.getAllClients()) {
-            if (client.isDeltaClient && client.lastSentState != null) {
-                // Calculate and send delta
-                List<JsonPatchOperation> patches =
-                        JsonDiffUtil.calculateDiff(client.lastSentState, newData);
-                client.emitter.sendEvent("delta", patches);
+            if (client.emitter.terminated()) {
+                this.removeClient(client.clientId);
             } else {
-                // Send full state if client has no previous state
-                client.emitter.sendEvent(newData);
-            }
+                if (client.isDeltaClient && client.lastSentState != null) {
+                    // Calculate and send delta
+                    List<JsonPatchOperation> patches =
+                            JsonDiffUtil.calculateDiff(client.lastSentState, newData);
+                    client.emitter.sendEvent("delta", patches);
+                } else {
+                    // Send full state if client has no previous state
+                    client.emitter.sendEvent(newData);
+                }
 
-            // Update client's tracked state
-            client.lastSentState = newData.deepCopy();
-            client.lastUpdateTime = System.currentTimeMillis();
+                // Update client's tracked state
+                client.lastSentState = newData.deepCopy();
+                client.lastUpdateTime = System.currentTimeMillis();
+            }
         }
     }
 }
